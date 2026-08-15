@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/autumn-ledger.schema.json",
+  "title": "秋招记录离线数据",
+  "type": "object",
+  "required": ["schemaVersion", "settings", "companies", "applications", "statusEvents", "interviews"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "exportedAt": { "type": ["string", "null"] },
+    "settings": {
+      "type": "object",
+      "required": ["currentBatch"],
+      "properties": { "currentBatch": { "type": "string", "minLength": 1 } },
+      "additionalProperties": true
+    },
+    "metadata": { "type": "object", "additionalProperties": true },
+    "companies": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/company" }
+    },
+    "applications": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/application" }
+    },
+    "statusEvents": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/statusEvent" }
+    },
+    "interviews": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/interview" }
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "id": { "type": "string", "minLength": 1 },
+    "nullableText": { "type": ["string", "null"] },
+    "status": {
+      "enum": ["已投递", "简历筛选中", "笔试中", "等待约面中", "面试中", "录用评估中", "已 Offer", "已拒绝", "已撤回", "岗位关闭"]
+    },
+    "company": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "name": { "type": "string", "minLength": 1 },
+        "notes": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "application": {
+      "type": "object",
+      "required": ["id", "companyId", "title", "status", "recruitmentBatch"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "companyId": { "$ref": "#/$defs/id" },
+        "title": { "type": "string", "minLength": 1 },
+        "city": { "$ref": "#/$defs/nullableText" },
+        "direction": { "$ref": "#/$defs/nullableText" },
+        "status": { "$ref": "#/$defs/status" },
+        "recruitmentBatch": { "type": "string", "minLength": 1 },
+        "appliedAt": { "$ref": "#/$defs/nullableText" },
+        "jobUrl": { "$ref": "#/$defs/nullableText" },
+        "notes": { "type": "string" },
+        "nextAction": { "type": "string" },
+        "nextActionAt": { "$ref": "#/$defs/nullableText" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "statusEvent": {
+      "type": "object",
+      "required": ["id", "applicationId", "toStatus"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "applicationId": { "$ref": "#/$defs/id" },
+        "fromStatus": { "anyOf": [{ "$ref": "#/$defs/status" }, { "type": "null" }] },
+        "toStatus": { "$ref": "#/$defs/status" },
+        "note": { "$ref": "#/$defs/nullableText" },
+        "createdAt": { "type": "string" }
+      },
+      "additionalProperties": true
+    },
+    "interview": {
+      "type": "object",
+      "required": ["id", "round"],
+      "properties": {
+        "id": { "$ref": "#/$defs/id" },
+        "applicationId": { "anyOf": [{ "$ref": "#/$defs/id" }, { "type": "null" }] },
+        "companyName": { "type": "string" },
+        "positionName": { "type": "string" },
+        "round": { "type": "string", "minLength": 1 },
+        "scheduledAt": { "$ref": "#/$defs/nullableText" },
+        "format": { "$ref": "#/$defs/nullableText" },
+        "team": { "$ref": "#/$defs/nullableText" },
+        "questions": { "type": "string" },
+        "answers": { "type": "string" },
+        "followUps": { "type": "string" },
+        "feedback": { "type": "string" },
+        "result": { "$ref": "#/$defs/nullableText" },
+        "review": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "allOf": [
+        {
+          "if": {
+            "anyOf": [
+              { "not": { "required": ["applicationId"] } },
+              { "properties": { "applicationId": { "type": "null" } } }
+            ]
+          },
+          "then": {
+            "required": ["companyName", "positionName"],
+            "properties": {
+              "companyName": { "type": "string", "minLength": 1 },
+              "positionName": { "type": "string", "minLength": 1 }
+            }
+          }
+        }
+      ],
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,1283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; img-src data: blob:; connect-src 'none'; object-src 'none'; frame-src 'none'; base-uri 'none'; form-action 'none'">
+  <title>秋招助手</title>
+  <style>
+    :root {
+      --ink: #17201d;
+      --muted: #67736e;
+      --paper: #f4f2eb;
+      --card: #fffef9;
+      --line: #dedbd0;
+      --green: #185f4b;
+      --green-soft: #dcebe4;
+      --orange: #d46a3a;
+      --orange-soft: #f8e4d8;
+      --blue: #3e6787;
+      --red: #a84842;
+      --shadow: 0 14px 40px rgba(28, 38, 34, .08);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 5% 0%, rgba(212, 106, 58, .11), transparent 27rem),
+        radial-gradient(circle at 96% 18%, rgba(24, 95, 75, .10), transparent 25rem),
+        var(--paper);
+      font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font: inherit; }
+    button { cursor: pointer; }
+    a { color: var(--green); }
+
+    .shell { width: min(1440px, calc(100% - 36px)); margin: 0 auto; padding: 26px 0 56px; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between; gap: 24px;
+      padding: 8px 4px 22px;
+    }
+    .brand { display: flex; align-items: center; gap: 13px; }
+    .brand-mark {
+      width: 42px; height: 42px; display: grid; place-items: center; border-radius: 13px;
+      color: white; background: var(--green); font-size: 22px; font-weight: 800;
+      box-shadow: 0 8px 18px rgba(24,95,75,.22);
+    }
+    .brand h1 { margin: 0; font-size: 21px; letter-spacing: .02em; }
+    .brand p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+    .storage-badge {
+      display: inline-flex; align-items: center; gap: 7px; padding: 8px 11px;
+      border: 1px solid var(--line); background: rgba(255,254,249,.75); border-radius: 999px;
+      color: var(--muted); font-size: 12px;
+    }
+    .storage-badge::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #c19a43; }
+    .storage-badge.ok::before { background: #3d9870; }
+    .storage-badge.warn::before { background: var(--orange); }
+
+    .nav {
+      display: flex; gap: 6px; padding: 5px; margin-bottom: 22px; width: fit-content;
+      border: 1px solid rgba(222,219,208,.92); border-radius: 14px; background: rgba(255,254,249,.72);
+      box-shadow: 0 8px 24px rgba(28,38,34,.04);
+      position: sticky; top: 10px; z-index: 20; backdrop-filter: blur(14px);
+    }
+    .nav button {
+      border: 0; border-radius: 10px; background: transparent; color: var(--muted);
+      padding: 9px 15px; font-size: 13px; font-weight: 650;
+    }
+    .nav button.active { color: white; background: var(--green); box-shadow: 0 5px 12px rgba(24,95,75,.18); }
+
+    .page { display: none; animation: enter .18s ease-out; }
+    .page.active { display: block; }
+    @keyframes enter { from { opacity: 0; transform: translateY(4px); } }
+
+    .hero {
+      display: flex; justify-content: space-between; gap: 24px; align-items: end; margin: 3px 2px 20px;
+    }
+    .eyebrow { margin: 0 0 7px; color: var(--orange); font-size: 12px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; }
+    .hero h2 { margin: 0; font-family: ui-serif, "Songti SC", serif; font-size: clamp(29px, 4vw, 44px); line-height: 1.13; letter-spacing: -.025em; }
+    .hero .subtitle { margin: 10px 0 0; max-width: 720px; color: var(--muted); line-height: 1.7; font-size: 14px; }
+    .hero-actions { display: flex; gap: 9px; flex-wrap: wrap; justify-content: flex-end; }
+
+    .btn {
+      border: 1px solid var(--line); color: var(--ink); background: var(--card);
+      padding: 9px 13px; border-radius: 10px; font-size: 13px; font-weight: 700;
+      transition: transform .12s, box-shadow .12s, border-color .12s;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 6px 16px rgba(28,38,34,.08); border-color: #c7c3b7; }
+    .btn.primary { border-color: var(--green); color: #fff; background: var(--green); }
+    .btn.danger { color: var(--red); }
+    .btn.ghost { background: transparent; }
+    .btn.small { padding: 6px 9px; font-size: 12px; }
+    .btn:disabled { opacity: .45; cursor: not-allowed; transform: none; box-shadow: none; }
+
+    .metrics { display: grid; grid-template-columns: repeat(4, 1fr); gap: 13px; margin-bottom: 13px; }
+    .metric, .card {
+      border: 1px solid rgba(222,219,208,.95); border-radius: var(--radius); background: rgba(255,254,249,.91);
+      box-shadow: var(--shadow);
+    }
+    .metric { padding: 19px; min-height: 132px; position: relative; overflow: hidden; }
+    .metric::after { content: ""; position: absolute; right: -22px; bottom: -35px; width: 92px; height: 92px; border-radius: 50%; background: var(--green-soft); opacity: .65; }
+    .metric.orange::after { background: var(--orange-soft); }
+    .metric.blue::after { background: #dfe9f0; }
+    .metric label { display: block; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .metric strong { display: block; margin: 12px 0 5px; font-size: 34px; line-height: 1; font-variant-numeric: tabular-nums; }
+    .metric span { color: var(--muted); font-size: 11px; }
+
+    .dashboard-grid { display: grid; grid-template-columns: minmax(0, 1.22fr) minmax(300px, .78fr); gap: 13px; }
+    .card { padding: 20px; }
+    .card-header { display: flex; justify-content: space-between; gap: 14px; align-items: center; margin-bottom: 18px; }
+    .card-header h3 { margin: 0; font-size: 15px; }
+    .card-header span { color: var(--muted); font-size: 11px; }
+    .card + .card { margin-top: 13px; }
+
+    .bar-row { display: grid; grid-template-columns: 108px minmax(80px, 1fr) 32px; gap: 12px; align-items: center; margin: 12px 0; }
+    .bar-label { color: #46514d; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .bar-track { height: 9px; border-radius: 99px; background: #ece9e0; overflow: hidden; }
+    .bar-fill { height: 100%; min-width: 3px; border-radius: inherit; background: var(--green); }
+    .bar-fill.orange { background: var(--orange); }
+    .bar-value { text-align: right; color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+
+    .empty { padding: 26px 12px; text-align: center; color: var(--muted); }
+    .empty strong { display: block; margin-bottom: 6px; color: #46514d; }
+    .list { display: grid; gap: 9px; }
+    .todo {
+      display: grid; grid-template-columns: 8px 1fr auto; gap: 11px; align-items: start;
+      padding: 11px 0; border-bottom: 1px solid #eae7dd;
+    }
+    .todo:last-child { border-bottom: 0; }
+    .todo-dot { width: 8px; height: 8px; margin-top: 5px; border-radius: 50%; background: var(--orange); }
+    .todo strong { display: block; font-size: 12px; }
+    .todo p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.5; }
+    .todo time { color: var(--muted); white-space: nowrap; font-size: 11px; }
+
+    .toolbar {
+      display: flex; align-items: center; gap: 9px; flex-wrap: wrap; padding: 12px;
+      border: 1px solid var(--line); background: rgba(255,254,249,.75); border-radius: 14px; margin-bottom: 13px;
+    }
+    .toolbar .grow { flex: 1; }
+    .field-compact {
+      min-height: 38px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 9px;
+      background: #fff; color: var(--ink); font-size: 12px; outline: none;
+    }
+    .field-compact:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(24,95,75,.10); }
+    input[type="search"].field-compact { min-width: min(320px, 100%); }
+
+    .table-card { padding: 0; overflow: hidden; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    th { padding: 13px 14px; text-align: left; color: var(--muted); background: #f7f5ef; font-weight: 700; white-space: nowrap; }
+    td { padding: 14px; border-top: 1px solid #ebe8df; vertical-align: top; }
+    tr:hover td { background: rgba(244,242,235,.55); }
+    .job-title { font-weight: 750; margin-bottom: 4px; }
+    .job-meta { color: var(--muted); font-size: 11px; }
+    .row-actions { display: flex; gap: 5px; white-space: nowrap; }
+    .status-pill {
+      display: inline-block; padding: 5px 8px; border-radius: 999px; color: #3c4c46;
+      background: #e7ebe8; white-space: nowrap; font-size: 11px; font-weight: 700;
+    }
+    .status-pill[data-status="已 Offer"] { color: #195d47; background: #d9eee4; }
+    .status-pill[data-status="面试中"], .status-pill[data-status="录用评估中"] { color: #92512f; background: #f7e0d3; }
+    .status-pill[data-status="已拒绝"], .status-pill[data-status="岗位关闭"] { color: #7b6965; background: #eee9e6; }
+    .status-editor { display: flex; align-items: center; gap: 6px; min-width: 190px; }
+    .status-editor select { min-width: 118px; }
+
+    .interview-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .interview-card h3 { margin: 0 0 6px; font-size: 16px; }
+    .interview-card .meta { color: var(--muted); font-size: 11px; margin-bottom: 15px; }
+    .interview-card .excerpt { margin: 0; color: #46514d; font-size: 12px; line-height: 1.7; white-space: pre-line; }
+    .interview-detail { margin-top: 14px; border-top: 1px solid #ebe8df; padding-top: 11px; }
+    .interview-detail summary { color: var(--green); cursor: pointer; font-size: 12px; font-weight: 750; }
+    .interview-detail section { margin-top: 12px; }
+    .interview-detail h4 { margin: 0 0 5px; font-size: 11px; }
+    .interview-detail p { margin: 0; color: #46514d; font-size: 11px; line-height: 1.65; white-space: pre-wrap; }
+    .interview-card footer { display: flex; justify-content: space-between; align-items: center; margin-top: 17px; padding-top: 13px; border-top: 1px solid #ebe8df; }
+
+    .data-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 13px; }
+    .data-card h3 { margin: 0 0 7px; font-size: 16px; }
+    .data-card > p { margin: 0 0 16px; color: var(--muted); font-size: 12px; line-height: 1.65; }
+    .action-stack { display: flex; gap: 8px; flex-wrap: wrap; }
+    .dropzone {
+      border: 1.5px dashed #c9c5b9; border-radius: 14px; padding: 17px; background: rgba(244,242,235,.65);
+    }
+    .dropzone input { width: 100%; font-size: 12px; }
+    .dropzone .row { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+    .notice { margin-top: 12px; padding: 10px 12px; border-radius: 10px; color: #36584d; background: var(--green-soft); font-size: 11px; line-height: 1.55; }
+    .notice.warn { color: #7d4f34; background: var(--orange-soft); }
+    .company-chips { display: flex; gap: 7px; flex-wrap: wrap; max-height: 240px; overflow: auto; }
+    .company-chip { display: inline-flex; align-items: center; gap: 5px; padding: 6px 8px; border: 1px solid var(--line); border-radius: 999px; background: white; font-size: 11px; }
+    .company-chip button { border: 0; padding: 0 2px; color: var(--muted); background: none; }
+    code.api { display: block; padding: 12px; border-radius: 10px; overflow: auto; background: #17201d; color: #e5eee9; font-size: 11px; line-height: 1.65; }
+
+    dialog {
+      width: min(680px, calc(100% - 28px)); max-height: calc(100vh - 40px); padding: 0;
+      border: 1px solid var(--line); border-radius: 18px; color: var(--ink); background: var(--card);
+      box-shadow: 0 26px 80px rgba(20,30,26,.28); overflow: hidden;
+    }
+    dialog::backdrop { background: rgba(23,32,29,.42); backdrop-filter: blur(3px); }
+    .dialog-head { display: flex; justify-content: space-between; align-items: center; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+    .dialog-head h3 { margin: 0; font-size: 17px; }
+    .close-dialog { border: 0; width: 30px; height: 30px; border-radius: 50%; color: var(--muted); background: #efede6; font-size: 18px; }
+    .dialog-body { padding: 20px; max-height: calc(100vh - 170px); overflow: auto; }
+    .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
+    .form-field { display: grid; gap: 6px; }
+    .form-field.full { grid-column: 1 / -1; }
+    .form-field label { color: #46514d; font-size: 11px; font-weight: 750; }
+    .form-field input, .form-field select, .form-field textarea {
+      width: 100%; padding: 10px 11px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: white; outline: none; font-size: 12px;
+    }
+    .form-field textarea { min-height: 92px; resize: vertical; line-height: 1.6; }
+    .form-field input:focus, .form-field select:focus, .form-field textarea:focus { border-color: var(--green); box-shadow: 0 0 0 3px rgba(24,95,75,.10); }
+    .dialog-foot { display: flex; justify-content: flex-end; gap: 8px; padding: 14px 20px; border-top: 1px solid var(--line); background: #f8f6f0; }
+    .history { margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+    .history h4 { margin: 0 0 10px; font-size: 12px; }
+    .history-item { border-left: 2px solid var(--green); padding: 2px 0 10px 11px; margin-left: 4px; font-size: 11px; }
+    .history-item time { color: var(--muted); }
+    .history-item p { margin: 4px 0 0; color: #46514d; white-space: pre-wrap; line-height: 1.5; }
+
+    .toast-stack { position: fixed; right: 20px; bottom: 20px; display: grid; gap: 8px; z-index: 100; }
+    .toast { min-width: 240px; max-width: min(400px, calc(100vw - 40px)); padding: 12px 14px; border-radius: 11px; color: white; background: #21352e; box-shadow: 0 12px 28px rgba(20,30,26,.2); font-size: 12px; animation: toastin .2s ease-out; }
+    .toast.error { background: #8e423d; }
+    @keyframes toastin { from { opacity: 0; transform: translateY(8px); } }
+
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    .footer-note { margin-top: 22px; text-align: center; color: var(--muted); font-size: 11px; }
+
+    @media (max-width: 900px) {
+      .metrics { grid-template-columns: repeat(2, 1fr); }
+      .dashboard-grid, .data-grid { grid-template-columns: 1fr; }
+      .interview-grid { grid-template-columns: 1fr; }
+      .hero { align-items: start; flex-direction: column; }
+      .hero-actions { justify-content: flex-start; }
+    }
+    @media (max-width: 620px) {
+      .shell { width: min(100% - 22px, 1440px); padding-top: 14px; }
+      .topbar { align-items: flex-start; }
+      .brand p { display: none; }
+      .storage-badge { max-width: 145px; }
+      .nav { width: 100%; overflow-x: auto; }
+      .nav button { flex: 1; white-space: nowrap; padding-inline: 10px; }
+      .metrics { grid-template-columns: 1fr 1fr; gap: 9px; }
+      .metric { min-height: 112px; padding: 15px; }
+      .metric strong { font-size: 29px; }
+      .card { padding: 16px; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-field.full { grid-column: auto; }
+      .toolbar > * { width: 100%; }
+      .toolbar .btn { width: auto; }
+      input[type="search"].field-compact { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark" aria-hidden="true">秋</div>
+        <div>
+          <h1>秋招助手</h1>
+          <p>一个文件、完全离线、数据只留在这台电脑</p>
+        </div>
+      </div>
+      <div id="storageBadge" class="storage-badge" role="status">正在读取本地数据…</div>
+    </header>
+
+    <nav class="nav" aria-label="主导航">
+      <button class="active" data-page="dashboard">总览</button>
+      <button data-page="applications">投递</button>
+      <button data-page="interviews">面试</button>
+      <button data-page="data">数据</button>
+    </nav>
+
+    <main>
+      <section id="page-dashboard" class="page active">
+        <div class="hero">
+          <div>
+            <p class="eyebrow" id="batchEyebrow">2027 AUTUMN</p>
+            <h2>把每一次推进，都记得清楚。</h2>
+            <p class="subtitle">首页只统计当前招聘批次；投递台账从空白开始，已有暑期面经单独保留在面试页。</p>
+          </div>
+          <div class="hero-actions">
+            <button class="btn" data-go="applications">查看投递</button>
+            <button class="btn primary" data-new-application>新增投递</button>
+          </div>
+        </div>
+
+        <div class="metrics">
+          <article class="metric"><label>已投公司</label><strong id="metricCompanies">0</strong><span id="metricCompaniesNote">当前批次去重</span></article>
+          <article class="metric orange"><label>岗位投递</label><strong id="metricApplications">0</strong><span id="metricApplicationsNote">当前批次全部记录</span></article>
+          <article class="metric blue"><label>活跃流程</label><strong id="metricActive">0</strong><span>不含终止状态</span></article>
+          <article class="metric"><label>已 Offer</label><strong id="metricOffers">0</strong><span>当前批次结果</span></article>
+        </div>
+
+        <div class="dashboard-grid">
+          <div>
+            <article class="card">
+              <div class="card-header"><h3>状态分布</h3><span id="statusChartCaption">当前批次</span></div>
+              <div id="statusChart"></div>
+            </article>
+            <article class="card">
+              <div class="card-header"><h3>方向与城市</h3><span>按投递岗位统计</span></div>
+              <div id="dimensionCharts" class="data-grid"></div>
+            </article>
+          </div>
+          <div>
+            <article class="card">
+              <div class="card-header"><h3>近期行动</h3><span>未来 30 天</span></div>
+              <div id="upcomingList" class="list"></div>
+            </article>
+            <article class="card">
+              <div class="card-header"><h3>数据提示</h3><span>本机保存</span></div>
+              <div id="dataHints" class="list"></div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="page-applications" class="page">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">APPLICATION LEDGER</p>
+            <h2>投递记录</h2>
+            <p class="subtitle">同一公司可记录多个岗位；状态变化会自动进入历史，不覆盖之前的进度。</p>
+          </div>
+          <div class="hero-actions"><button class="btn primary" data-new-application>新增投递</button></div>
+        </div>
+        <div class="toolbar">
+          <label class="sr-only" for="applicationSearch">搜索投递</label>
+          <input id="applicationSearch" class="field-compact grow" type="search" placeholder="搜索公司、岗位、城市或方向">
+          <label class="sr-only" for="applicationStatusFilter">状态</label>
+          <select id="applicationStatusFilter" class="field-compact"><option value="">全部状态</option></select>
+          <label class="sr-only" for="applicationBatchFilter">批次</label>
+          <select id="applicationBatchFilter" class="field-compact"><option value="">全部批次</option></select>
+          <button id="clearApplicationFilters" class="btn small ghost">清除筛选</button>
+        </div>
+        <article class="card table-card">
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>公司 / 岗位</th><th>批次</th><th>状态</th><th>地点 / 方向</th><th>下一步</th><th>更新</th><th>操作</th></tr></thead>
+              <tbody id="applicationsBody"></tbody>
+            </table>
+          </div>
+          <div id="applicationsEmpty" class="empty" hidden><strong>没有匹配的投递</strong>新增一条，或清除上方筛选。</div>
+        </article>
+      </section>
+
+      <section id="page-interviews" class="page">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">INTERVIEW NOTES</p>
+            <h2>面试复盘</h2>
+            <p class="subtitle">按面试时间倒序展示，越新的越靠上；未填写时间时按创建时间排序。</p>
+          </div>
+          <div class="hero-actions"><button id="newInterviewButton" class="btn primary">记录面试</button></div>
+        </div>
+        <div id="interviewGrid" class="interview-grid"></div>
+        <div id="interviewsEmpty" class="card empty" hidden><strong>还没有面试记录</strong>有约面后，在这里按轮次记录。</div>
+      </section>
+
+      <section id="page-data" class="page">
+        <div class="hero">
+          <div>
+            <p class="eyebrow">LOCAL DATA</p>
+            <h2>导入、导出与设置</h2>
+            <p class="subtitle">HTML 本身不随记录变化；新增内容保存在浏览器本地。请定期导出 JSON 全量备份。</p>
+          </div>
+        </div>
+        <div class="data-grid">
+          <article class="card data-card">
+            <h3>导出</h3>
+            <p>JSON 是可完整恢复的标准备份；CSV 适合表格编辑；Markdown 适合阅读和归档。</p>
+            <div class="action-stack">
+              <button class="btn primary" data-export="json">全量 JSON</button>
+              <button class="btn" data-export="csv">投递 CSV</button>
+              <button class="btn" data-export="markdown">Markdown</button>
+            </div>
+            <div id="exportStatus" class="notice">尚未在这个浏览器中导出备份。</div>
+          </article>
+
+          <article class="card data-card">
+            <h3>导入新信息</h3>
+            <p>支持 JSON、CSV 和 Markdown。合并模式不会删除现有记录；覆盖模式仅接受完整 JSON。</p>
+            <div class="dropzone">
+              <input id="importFile" type="file" accept=".json,.csv,.md,.markdown,application/json,text/csv,text/markdown">
+              <div class="row">
+                <select id="importMode" class="field-compact"><option value="merge">合并到现有数据</option><option value="replace">覆盖全部数据</option></select>
+                <button id="importButton" class="btn primary" disabled>开始导入</button>
+              </div>
+            </div>
+            <div id="importStatus" class="notice warn">选择文件后会先校验，再请求确认。</div>
+          </article>
+
+          <article class="card data-card">
+            <div class="card-header"><div><h3>公司清单</h3><p id="companyCountText" style="margin:5px 0 0;color:var(--muted);font-size:11px"></p></div><button id="newCompanyButton" class="btn small">新增公司</button></div>
+            <div id="companyChips" class="company-chips"></div>
+          </article>
+
+          <article class="card data-card">
+            <h3>当前批次与恢复</h3>
+            <p>总览指标只计算当前批次；修改后不会改动历史记录。</p>
+            <div class="action-stack">
+              <input id="currentBatchInput" class="field-compact" value="2027-autumn" aria-label="当前批次">
+              <button id="saveBatchButton" class="btn">保存批次</button>
+              <button id="restorePreviousButton" class="btn" disabled>恢复导入前数据</button>
+              <button id="resetButton" class="btn danger">恢复最初数据</button>
+            </div>
+          </article>
+
+          <article class="card data-card">
+            <h3>浏览器脚本接口</h3>
+            <p>自动化脚本可在开发者工具中调用同一套校验、写入和导出逻辑。</p>
+            <code class="api">await AutumnLedger.ready
+await AutumnLedger.getSnapshot()
+await AutumnLedger.importData(text, { format: 'json', mode: 'merge' })
+await AutumnLedger.updateStatus(applicationId, '面试中', '一面通过')
+await AutumnLedger.exportData('json')</code>
+          </article>
+
+          <article class="card data-card">
+            <h3>离线与隐私</h3>
+            <p>此文件没有 CDN、接口请求、登录或后台进程，内容安全策略也禁止网络连接。换浏览器或清理网站数据前，务必导出 JSON。</p>
+            <div id="recordSummary" class="notice"></div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <p class="footer-note">离线单文件 · schemaVersion 1 · 不会自动投递或访问招聘网站</p>
+  </div>
+
+  <dialog id="applicationDialog">
+    <form id="applicationForm">
+      <div class="dialog-head"><h3 id="applicationDialogTitle">新增投递</h3><button type="button" class="close-dialog" data-close-dialog aria-label="关闭">×</button></div>
+      <div class="dialog-body">
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <div class="form-field"><label for="appCompany">公司 *</label><input id="appCompany" name="companyName" list="applicationCompanyOptions" required maxlength="100" placeholder="选择大厂或直接输入公司名称"><input type="hidden" name="companyId"><datalist id="applicationCompanyOptions"></datalist></div>
+          <div class="form-field"><label for="appTitle">岗位 *</label><input id="appTitle" name="title" required maxlength="200"></div>
+          <div class="form-field"><label for="appBatch">招聘批次 *</label><input id="appBatch" name="recruitmentBatch" required placeholder="2027-autumn"></div>
+          <div class="form-field"><label for="appStatus">状态 *</label><select id="appStatus" name="status" required></select></div>
+          <div class="form-field"><label for="appCity">城市</label><input id="appCity" name="city" placeholder="北京 / 上海 / 深圳…"></div>
+          <div class="form-field"><label for="appDirection">方向</label><input id="appDirection" name="direction" placeholder="大模型 / 推荐 / Agent…"></div>
+          <div class="form-field"><label for="appAppliedAt">投递日期</label><input id="appAppliedAt" name="appliedAt" type="date"></div>
+          <div class="form-field"><label for="appJobUrl">岗位链接</label><input id="appJobUrl" name="jobUrl" type="url" placeholder="https://..."></div>
+          <div class="form-field"><label for="appNextAction">下一步行动</label><input id="appNextAction" name="nextAction" placeholder="准备一面 / 跟进 HR…"></div>
+          <div class="form-field"><label for="appNextActionAt">行动时间</label><input id="appNextActionAt" name="nextActionAt" type="datetime-local"></div>
+          <div class="form-field full"><label for="appNotes">备注</label><textarea id="appNotes" name="notes" placeholder="JD 重点、联系人、进度说明…"></textarea></div>
+          <div class="form-field full"><label for="appStatusNote">本次状态变化说明</label><input id="appStatusNote" name="statusNote" placeholder="仅在状态变化时写入历史"></div>
+        </div>
+        <div id="applicationHistory" class="history" hidden></div>
+      </div>
+      <div class="dialog-foot"><button type="button" class="btn" data-close-dialog>取消</button><button type="submit" class="btn primary">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="interviewDialog">
+    <form id="interviewForm">
+      <div class="dialog-head"><h3 id="interviewDialogTitle">记录面试</h3><button type="button" class="close-dialog" data-close-dialog aria-label="关闭">×</button></div>
+      <div class="dialog-body">
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <div class="form-field full"><label for="interviewApplication">关联投递</label><select id="interviewApplication" name="applicationId"><option value="">不关联投递（独立面经）</option></select></div>
+          <div class="form-field"><label for="interviewCompany">公司 *</label><input id="interviewCompany" name="companyName" list="companyOptions" required maxlength="100"><datalist id="companyOptions"></datalist></div>
+          <div class="form-field"><label for="interviewPosition">岗位 *</label><input id="interviewPosition" name="positionName" required maxlength="200"></div>
+          <div class="form-field"><label for="interviewRound">轮次 *</label><input id="interviewRound" name="round" required placeholder="一面 / HR 面"></div>
+          <div class="form-field"><label for="interviewAt">时间</label><input id="interviewAt" name="scheduledAt" type="datetime-local"></div>
+          <div class="form-field"><label for="interviewFormat">形式</label><input id="interviewFormat" name="format" placeholder="视频 / 现场 / 电话"></div>
+          <div class="form-field"><label for="interviewTeam">团队</label><input id="interviewTeam" name="team"></div>
+          <div class="form-field full"><label for="interviewQuestions">面试问题</label><textarea id="interviewQuestions" name="questions"></textarea></div>
+          <div class="form-field full"><label for="interviewAnswers">我的回答</label><textarea id="interviewAnswers" name="answers"></textarea></div>
+          <div class="form-field full"><label for="interviewFollowUps">追问</label><textarea id="interviewFollowUps" name="followUps"></textarea></div>
+          <div class="form-field full"><label for="interviewFeedback">反馈</label><textarea id="interviewFeedback" name="feedback"></textarea></div>
+          <div class="form-field"><label for="interviewResult">结果</label><input id="interviewResult" name="result" placeholder="待定 / 通过 / 未通过"></div>
+          <div class="form-field full"><label for="interviewReview">复盘与改进</label><textarea id="interviewReview" name="review"></textarea></div>
+        </div>
+      </div>
+      <div class="dialog-foot"><button type="button" class="btn" data-close-dialog>取消</button><button type="submit" class="btn primary">保存</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="companyDialog">
+    <form id="companyForm">
+      <div class="dialog-head"><h3 id="companyDialogTitle">新增公司</h3><button type="button" class="close-dialog" data-close-dialog aria-label="关闭">×</button></div>
+      <div class="dialog-body">
+        <input type="hidden" name="id">
+        <div class="form-grid">
+          <div class="form-field full"><label for="companyName">公司名称 *</label><input id="companyName" name="name" required maxlength="100"></div>
+          <div class="form-field full"><label for="companyNotes">备注</label><textarea id="companyNotes" name="notes"></textarea></div>
+        </div>
+      </div>
+      <div class="dialog-foot"><button type="button" class="btn" data-close-dialog>取消</button><button type="submit" class="btn primary">保存</button></div>
+    </form>
+  </dialog>
+
+  <div id="toastStack" class="toast-stack" aria-live="polite"></div>
+
+  <script id="initialData" type="application/json">
+{
+  "schemaVersion": 1,
+  "exportedAt": null,
+  "settings": {
+    "currentBatch": "2027-autumn"
+  },
+  "metadata": {
+    "distribution": "public-template",
+    "lastExportAt": null
+  },
+  "companies": [],
+  "applications": [],
+  "statusEvents": [],
+  "interviews": []
+}
+  </script>
+
+  <script>
+  (() => {
+    'use strict';
+
+    const SCHEMA_VERSION = 1;
+    const DB_NAME = 'autumn-ledger-public-v1';
+    const STORE_NAME = 'ledger';
+    const STORAGE_KEY = 'autumn-ledger-public-snapshot-v1';
+    const PREVIOUS_KEY = 'autumn-ledger-public-previous-v1';
+    const STATUSES = ['已投递','简历筛选中','笔试中','等待约面中','面试中','录用评估中','已 Offer','已拒绝','已撤回','岗位关闭'];
+    const MAJOR_COMPANY_CANDIDATES = ['腾讯','字节跳动','阿里系','蚂蚁','百度','京东','华为','美团','拼多多','快手','小米','OPPO','vivo','网易','滴滴','小红书','大疆'];
+    const TERMINAL_STATUSES = new Set(['已 Offer','已拒绝','已撤回','岗位关闭']);
+    const INITIAL_SNAPSHOT = JSON.parse(document.getElementById('initialData').textContent);
+    let state = null;
+    let storageKind = 'memory';
+    let previousAvailable = false;
+
+    const $ = (selector, root = document) => root.querySelector(selector);
+    const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+    const clone = value => JSON.parse(JSON.stringify(value));
+    const now = () => new Date().toISOString();
+    const normalizeName = value => String(value || '').trim().toLocaleLowerCase('zh-CN').replace(/[\s·・_.-]+/g, '');
+    const makeId = prefix => `${prefix}-${globalThis.crypto?.randomUUID?.() || Date.now().toString(36) + Math.random().toString(36).slice(2)}`;
+    const nullable = value => String(value ?? '').trim() || null;
+    const textValue = value => String(value ?? '').trim();
+    const escapeHTML = value => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+    const safeUrl = value => { try { const url = new URL(value); return ['http:','https:'].includes(url.protocol) ? url.href : null; } catch { return null; } };
+    const formatDate = (value, includeTime = false) => {
+      if (!value) return '—';
+      const date = new Date(value.includes?.('T') ? value : value.replace(' ', 'T') + 'Z');
+      if (Number.isNaN(date.getTime())) return value;
+      return new Intl.DateTimeFormat('zh-CN', includeTime ? {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'} : {year:'numeric',month:'2-digit',day:'2-digit'}).format(date);
+    };
+    const toLocalInput = value => {
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value).slice(0,16);
+      const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+      return local.toISOString().slice(0,16);
+    };
+    const toast = (message, error = false) => {
+      const el = document.createElement('div');
+      el.className = `toast${error ? ' error' : ''}`;
+      el.textContent = message;
+      $('#toastStack').append(el);
+      setTimeout(() => el.remove(), 3800);
+    };
+
+    function assert(condition, message) { if (!condition) throw new Error(message); }
+    function validateSnapshot(input, { partial = false } = {}) {
+      assert(input && typeof input === 'object' && !Array.isArray(input), '数据必须是 JSON 对象');
+      if (!partial) assert(input.schemaVersion === SCHEMA_VERSION, `仅支持 schemaVersion ${SCHEMA_VERSION}`);
+      if (input.schemaVersion != null) assert(input.schemaVersion === SCHEMA_VERSION, `仅支持 schemaVersion ${SCHEMA_VERSION}`);
+      const keys = ['companies','applications','statusEvents','interviews'];
+      if (!partial) keys.forEach(key => assert(Array.isArray(input[key]), `缺少数组字段：${key}`));
+      keys.forEach(key => { if (input[key] != null) assert(Array.isArray(input[key]), `${key} 必须是数组`); });
+
+      const companies = input.companies || [];
+      const applications = input.applications || [];
+      const events = input.statusEvents || [];
+      const interviews = input.interviews || [];
+      const ids = new Set();
+      const addId = (id, label) => { assert(textValue(id), `${label} 缺少 id`); assert(!ids.has(id), `id 重复：${id}`); ids.add(id); };
+      companies.forEach((item, i) => { addId(item.id, `companies[${i}]`); assert(textValue(item.name), `companies[${i}] 缺少 name`); });
+      applications.forEach((item, i) => {
+        addId(item.id, `applications[${i}]`);
+        assert(textValue(item.companyId), `applications[${i}] 缺少 companyId`);
+        assert(textValue(item.title), `applications[${i}] 缺少 title`);
+        assert(STATUSES.includes(item.status), `applications[${i}] 状态无效：${item.status}`);
+        assert(textValue(item.recruitmentBatch), `applications[${i}] 缺少 recruitmentBatch`);
+      });
+      events.forEach((item, i) => { addId(item.id, `statusEvents[${i}]`); assert(textValue(item.applicationId), `statusEvents[${i}] 缺少 applicationId`); assert(STATUSES.includes(item.toStatus), `statusEvents[${i}] 状态无效`); });
+      interviews.forEach((item, i) => {
+        addId(item.id, `interviews[${i}]`);
+        assert(textValue(item.round), `interviews[${i}] 缺少 round`);
+        if (!textValue(item.applicationId)) {
+          assert(textValue(item.companyName), `interviews[${i}] 未关联投递时必须填写 companyName`);
+          assert(textValue(item.positionName), `interviews[${i}] 未关联投递时必须填写 positionName`);
+        }
+      });
+
+      if (!partial) {
+        const companyIds = new Set(companies.map(x => x.id));
+        const applicationIds = new Set(applications.map(x => x.id));
+        applications.forEach(item => assert(companyIds.has(item.companyId), `投递 ${item.id} 引用了不存在的公司 ${item.companyId}`));
+        events.forEach(item => assert(applicationIds.has(item.applicationId), `状态历史 ${item.id} 引用了不存在的投递`));
+        interviews.forEach(item => { if (item.applicationId) assert(applicationIds.has(item.applicationId), `面试 ${item.id} 引用了不存在的投递`); });
+      }
+      return { valid: true, counts: { companies: companies.length, applications: applications.length, statusEvents: events.length, interviews: interviews.length } };
+    }
+
+    function normalizeSnapshot(input) {
+      const snapshot = clone(input);
+      snapshot.schemaVersion = SCHEMA_VERSION;
+      snapshot.exportedAt = snapshot.exportedAt || now();
+      snapshot.settings = { currentBatch: textValue(snapshot.settings?.currentBatch) || '2027-autumn' };
+      snapshot.metadata = { ...(snapshot.metadata || {}), lastExportAt: snapshot.metadata?.lastExportAt || null };
+      for (const key of ['companies','applications','statusEvents','interviews']) snapshot[key] = snapshot[key] || [];
+      return snapshot;
+    }
+
+    function openDatabase() {
+      return new Promise((resolve, reject) => {
+        if (!('indexedDB' in globalThis)) return reject(new Error('IndexedDB 不可用'));
+        const request = indexedDB.open(DB_NAME, 1);
+        request.onupgradeneeded = () => request.result.createObjectStore(STORE_NAME);
+        request.onsuccess = () => resolve(request.result);
+        request.onerror = () => reject(request.error || new Error('IndexedDB 打开失败'));
+      });
+    }
+    async function idbGet(key) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readonly');
+        const request = tx.objectStore(STORE_NAME).get(key);
+        request.onsuccess = () => { db.close(); resolve(request.result); };
+        request.onerror = () => { db.close(); reject(request.error); };
+      });
+    }
+    async function idbSet(key, value) {
+      const db = await openDatabase();
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(STORE_NAME, 'readwrite');
+        tx.objectStore(STORE_NAME).put(value, key);
+        tx.oncomplete = () => { db.close(); resolve(); };
+        tx.onerror = () => { db.close(); reject(tx.error); };
+      });
+    }
+    async function storageGet(key) {
+      if (storageKind === 'indexeddb') return idbGet(key);
+      if (storageKind === 'localstorage') { const raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; }
+      return null;
+    }
+    async function storageSet(key, value) {
+      if (storageKind === 'indexeddb') return idbSet(key, value);
+      if (storageKind === 'localstorage') return localStorage.setItem(key, JSON.stringify(value));
+    }
+    async function detectStorage() {
+      try {
+        const db = await openDatabase(); db.close(); storageKind = 'indexeddb'; return;
+      } catch {}
+      try {
+        const probe = '__autumn_ledger_probe__'; localStorage.setItem(probe, '1'); localStorage.removeItem(probe); storageKind = 'localstorage'; return;
+      } catch {}
+      storageKind = 'memory';
+    }
+    async function persist({ render = true } = {}) {
+      validateSnapshot(state);
+      state.exportedAt = now();
+      if (storageKind !== 'memory') await storageSet(STORAGE_KEY, state);
+      updateStorageBadge();
+      if (render) renderAll();
+      document.dispatchEvent(new CustomEvent('autumn-ledger:change', { detail: clone(state) }));
+    }
+    async function savePrevious() {
+      if (storageKind !== 'memory') { await storageSet(PREVIOUS_KEY, state); previousAvailable = true; }
+    }
+
+    function companyMap() { return new Map(state.companies.map(item => [item.id, item])); }
+    function applicationMap() { return new Map(state.applications.map(item => [item.id, item])); }
+    function findCompany(id) { return companyMap().get(id); }
+    function findApplication(id) { return applicationMap().get(id); }
+    function ensureCompany(companyName, companyId = null) {
+      const current = companyId ? findCompany(companyId) : null;
+      const name = textValue(companyName) || current?.name || '';
+      assert(name, '公司名称不能为空');
+      const existing = state.companies.find(item => normalizeName(item.name) === normalizeName(name));
+      if (existing) return existing;
+      const item = { id:makeId('company'), name, notes:'', createdAt:now(), updatedAt:now() };
+      state.companies.push(item);
+      return item;
+    }
+
+    function mergeSnapshots(baseInput, incomingInput) {
+      const base = normalizeSnapshot(baseInput);
+      validateSnapshot(base);
+      validateSnapshot(incomingInput, { partial: true });
+      const incoming = normalizeSnapshot({ schemaVersion: 1, settings: base.settings, companies: [], applications: [], statusEvents: [], interviews: [], ...incomingInput });
+      const result = clone(base);
+      const companyIdMap = new Map();
+      const companiesById = new Map(result.companies.map(x => [x.id, x]));
+      const companiesByName = new Map(result.companies.map(x => [normalizeName(x.name), x]));
+      for (const raw of incoming.companies) {
+        const providedFields = Array.isArray(raw.__providedFields) ? raw.__providedFields : null;
+        const item = { ...raw }; delete item.__providedFields;
+        const sameId = companiesById.get(item.id);
+        const sameName = companiesByName.get(normalizeName(item.name));
+        const existing = sameId || sameName;
+        if (existing) {
+          companyIdMap.set(item.id, existing.id);
+          const patch = providedFields ? Object.fromEntries(Object.entries(item).filter(([key]) => ['name',...providedFields].includes(key))) : item;
+          Object.assign(existing, { ...patch, id: existing.id, updatedAt: now() });
+        } else {
+          const next = { notes: '', createdAt: now(), updatedAt: now(), ...item };
+          if (companiesById.has(next.id)) next.id = makeId('company');
+          result.companies.push(next); companiesById.set(next.id, next); companiesByName.set(normalizeName(next.name), next); companyIdMap.set(item.id, next.id);
+        }
+      }
+
+      const appsById = new Map(result.applications.map(x => [x.id, x]));
+      const appIdentity = item => [item.companyId, normalizeName(item.title), item.recruitmentBatch, item.appliedAt || ''].join('|');
+      const appsByIdentity = new Map(result.applications.map(x => [appIdentity(x), x]));
+      const applicationIdMap = new Map();
+      for (const raw of incoming.applications) {
+        const providedFields = Array.isArray(raw.__providedFields) ? raw.__providedFields : null;
+        const item = { ...raw, companyId: companyIdMap.get(raw.companyId) || raw.companyId };
+        delete item.__providedFields;
+        assert(result.companies.some(x => x.id === item.companyId), `导入投递引用了不存在的公司：${raw.companyId}`);
+        const existing = appsById.get(item.id) || appsByIdentity.get(appIdentity(item));
+        if (existing) {
+          applicationIdMap.set(raw.id, existing.id);
+          const oldStatus = existing.status;
+          const patch = providedFields ? Object.fromEntries(Object.entries(item).filter(([key]) => ['companyId','title',...providedFields].includes(key))) : item;
+          Object.assign(existing, { ...patch, id: existing.id, updatedAt: now() });
+          if (oldStatus !== existing.status && !incoming.statusEvents.some(e => e.applicationId === raw.id && e.toStatus === existing.status)) {
+            result.statusEvents.push({ id: makeId('status-event'), applicationId: existing.id, fromStatus: oldStatus, toStatus: existing.status, note: '由合并导入更新', createdAt: now() });
+          }
+        } else {
+          const next = { city:null, direction:null, appliedAt:null, jobUrl:null, notes:'', nextAction:'', nextActionAt:null, createdAt:now(), updatedAt:now(), ...item };
+          if (appsById.has(next.id)) next.id = makeId('application');
+          result.applications.push(next); appsById.set(next.id, next); appsByIdentity.set(appIdentity(next), next); applicationIdMap.set(raw.id, next.id);
+          if (!incoming.statusEvents.some(event => event.applicationId === raw.id)) result.statusEvents.push({ id:makeId('status-event'), applicationId:next.id, fromStatus:null, toStatus:next.status, note:'导入新投递', createdAt:now() });
+        }
+      }
+
+      for (const raw of incoming.statusEvents) {
+        const applicationId = applicationIdMap.get(raw.applicationId) || raw.applicationId;
+        assert(result.applications.some(x => x.id === applicationId), `导入状态历史引用了不存在的投递：${raw.applicationId}`);
+        const existing = result.statusEvents.find(x => x.id === raw.id);
+        if (existing) Object.assign(existing, { ...raw, applicationId, id: existing.id });
+        else result.statusEvents.push({ note:null, createdAt:now(), ...raw, id: result.statusEvents.some(x => x.id === raw.id) ? makeId('status-event') : raw.id, applicationId });
+      }
+      for (const raw of incoming.interviews) {
+        const applicationId = raw.applicationId ? (applicationIdMap.get(raw.applicationId) || raw.applicationId) : null;
+        if (applicationId) assert(result.applications.some(x => x.id === applicationId), `导入面试引用了不存在的投递：${raw.applicationId}`);
+        else { assert(textValue(raw.companyName), '独立面试缺少 companyName'); assert(textValue(raw.positionName), '独立面试缺少 positionName'); }
+        const existing = result.interviews.find(x => x.id === raw.id);
+        if (existing) Object.assign(existing, { ...raw, applicationId, id: existing.id, updatedAt: now() });
+        else result.interviews.push({ applicationId:null, companyName:'', positionName:'', scheduledAt:null, format:null, team:null, questions:'', answers:'', followUps:'', feedback:'', result:null, review:'', createdAt:now(), updatedAt:now(), ...raw, id: result.interviews.some(x => x.id === raw.id) ? makeId('interview') : raw.id, applicationId });
+      }
+      if (incomingInput.settings?.currentBatch) result.settings.currentBatch = incomingInput.settings.currentBatch;
+      result.exportedAt = now();
+      validateSnapshot(result);
+      return result;
+    }
+
+    function parseCSV(text) {
+      const rows = [];
+      let row = [], cell = '', quoted = false;
+      const source = String(text).replace(/^\uFEFF/, '');
+      for (let i = 0; i < source.length; i++) {
+        const char = source[i];
+        if (quoted) {
+          if (char === '"' && source[i + 1] === '"') { cell += '"'; i++; }
+          else if (char === '"') quoted = false;
+          else cell += char;
+        } else if (char === '"') quoted = true;
+        else if (char === ',') { row.push(cell); cell = ''; }
+        else if (char === '\n') { row.push(cell.replace(/\r$/, '')); if (row.some(x => x.trim())) rows.push(row); row = []; cell = ''; }
+        else cell += char;
+      }
+      row.push(cell.replace(/\r$/, '')); if (row.some(x => x.trim())) rows.push(row);
+      assert(rows.length >= 2, 'CSV 至少需要表头和一行数据');
+      const aliases = {
+        id:'id', '记录ID':'id', '记录 ID':'id', company:'company', '公司':'company', companyId:'companyId', '公司ID':'companyId',
+        title:'title', '岗位':'title', '岗位名称':'title', city:'city', '城市':'city', direction:'direction', '方向':'direction',
+        status:'status', '状态':'status', recruitmentBatch:'recruitmentBatch', batch:'recruitmentBatch', '批次':'recruitmentBatch', '招聘批次':'recruitmentBatch',
+        appliedAt:'appliedAt', '投递日期':'appliedAt', jobUrl:'jobUrl', '岗位链接':'jobUrl', '链接':'jobUrl', notes:'notes', '备注':'notes',
+        nextAction:'nextAction', '下一步':'nextAction', '下一步行动':'nextAction', nextActionAt:'nextActionAt', '行动时间':'nextActionAt', '下一步时间':'nextActionAt'
+      };
+      const headers = rows[0].map(x => aliases[x.trim()] || x.trim());
+      assert(headers.includes('company') || headers.includes('companyId'), 'CSV 表头必须包含“公司”或 companyId');
+      assert(headers.includes('title'), 'CSV 表头必须包含“岗位”或 title');
+      const companies = [], applications = [];
+      const importedCompanies = new Map();
+      rows.slice(1).forEach((values, index) => {
+        const raw = {}; headers.forEach((key, i) => raw[key] = values[i]?.trim() || '');
+        assert(raw.title, `CSV 第 ${index + 2} 行缺少岗位`);
+        let companyId = raw.companyId;
+        if (raw.company) {
+          const key = normalizeName(raw.company);
+          if (!importedCompanies.has(key)) {
+            const company = { id: companyId || makeId('company-import'), name: raw.company, notes:'', createdAt:now(), updatedAt:now(), __providedFields:['name'] };
+            importedCompanies.set(key, company); companies.push(company);
+          }
+          companyId = importedCompanies.get(key).id;
+        }
+        assert(companyId, `CSV 第 ${index + 2} 行缺少公司`);
+        applications.push({
+          id: raw.id || makeId('application-import'), companyId, title: raw.title, city: nullable(raw.city), direction: nullable(raw.direction),
+          status: raw.status || '已投递', recruitmentBatch: raw.recruitmentBatch || state?.settings?.currentBatch || '2027-autumn',
+          appliedAt: nullable(raw.appliedAt), jobUrl: nullable(raw.jobUrl), notes: raw.notes || '', nextAction: raw.nextAction || '',
+          nextActionAt: nullable(raw.nextActionAt), createdAt: now(), updatedAt: now(), __providedFields: headers
+        });
+      });
+      const partial = { schemaVersion: 1, companies, applications, statusEvents: [], interviews: [] };
+      validateSnapshot(partial, { partial: true });
+      return partial;
+    }
+
+    function parseMarkdown(text) {
+      const companies = [], applications = [];
+      let currentCompany = null, currentApplication = null;
+      const companyByName = new Map();
+      const fieldAliases = { '记录 ID':'id', '记录ID':'id', '状态':'status', '批次':'recruitmentBatch', '招聘批次':'recruitmentBatch', '城市':'city', '方向':'direction', '投递日期':'appliedAt', '岗位链接':'jobUrl', '链接':'jobUrl', '下一步':'nextAction', '下一步行动':'nextAction', '行动时间':'nextActionAt', '备注':'notes' };
+      for (const rawLine of String(text).split(/\r?\n/)) {
+        const line = rawLine.trim();
+        const companyMatch = line.match(/^###\s+(?!#)(.+)$/);
+        const appMatch = line.match(/^####\s+(?!#)(.+)$/);
+        if (companyMatch) {
+          const name = companyMatch[1].replace(/^\*\*|\*\*$/g, '').trim();
+          if (!name) continue;
+          const key = normalizeName(name);
+          if (!companyByName.has(key)) {
+            const company = { id: makeId('company-import'), name, notes:'', createdAt:now(), updatedAt:now(), __providedFields:['name'] };
+            companyByName.set(key, company); companies.push(company);
+          }
+          currentCompany = companyByName.get(key); currentApplication = null;
+        } else if (appMatch && currentCompany) {
+          currentApplication = { id: makeId('application-import'), companyId: currentCompany.id, title: appMatch[1].trim(), city:null, direction:null, status:'已投递', recruitmentBatch:state?.settings?.currentBatch || '2027-autumn', appliedAt:null, jobUrl:null, notes:'', nextAction:'', nextActionAt:null, createdAt:now(), updatedAt:now(), __providedFields:['companyId','title'] };
+          applications.push(currentApplication);
+        } else if (currentApplication) {
+          const field = line.match(/^[-*]\s*([^：:]+)[：:]\s*(.*)$/);
+          if (field && fieldAliases[field[1].trim()]) {
+            const key = fieldAliases[field[1].trim()], value = field[2].trim();
+            const cleanValue = value === '—' ? '' : value;
+            currentApplication[key] = ['city','direction','appliedAt','jobUrl','nextActionAt'].includes(key) ? nullable(cleanValue) : cleanValue;
+            if (!currentApplication.__providedFields.includes(key)) currentApplication.__providedFields.push(key);
+          }
+        }
+      }
+      assert(companies.length, 'Markdown 中没有找到三级公司标题（例如：### 腾讯）');
+      const partial = { schemaVersion: 1, companies, applications, statusEvents: [], interviews: [] };
+      validateSnapshot(partial, { partial: true });
+      return partial;
+    }
+
+    function parseImport(input, format) {
+      if (format === 'json') {
+        const parsed = typeof input === 'string' ? JSON.parse(input) : clone(input);
+        validateSnapshot(parsed, { partial: !(parsed.companies && parsed.applications && parsed.statusEvents && parsed.interviews) });
+        return parsed;
+      }
+      if (format === 'csv') return parseCSV(input);
+      if (format === 'markdown' || format === 'md') return parseMarkdown(input);
+      throw new Error(`不支持的导入格式：${format}`);
+    }
+
+    function csvEscape(value) { const text = String(value ?? ''); return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text; }
+    function exportCSV(snapshot) {
+      const companies = new Map(snapshot.companies.map(x => [x.id, x.name]));
+      const headers = ['记录ID','公司','companyId','岗位','城市','方向','状态','招聘批次','投递日期','岗位链接','备注','下一步行动','行动时间','更新时间'];
+      const rows = snapshot.applications.map(item => [item.id, companies.get(item.companyId) || '', item.companyId, item.title, item.city, item.direction, item.status, item.recruitmentBatch, item.appliedAt, item.jobUrl, item.notes, item.nextAction, item.nextActionAt, item.updatedAt]);
+      return '\uFEFF' + [headers, ...rows].map(row => row.map(csvEscape).join(',')).join('\r\n');
+    }
+    function exportMarkdown(snapshot) {
+      const lines = ['# 秋招投递记录', '', `> 导出时间：${now()} · schemaVersion ${SCHEMA_VERSION}`, ''];
+      const appsByCompany = new Map();
+      snapshot.applications.forEach(app => { if (!appsByCompany.has(app.companyId)) appsByCompany.set(app.companyId, []); appsByCompany.get(app.companyId).push(app); });
+      for (const company of [...snapshot.companies].sort((a,b) => a.name.localeCompare(b.name, 'zh-CN'))) {
+        lines.push(`### ${company.name}`, '');
+        const apps = appsByCompany.get(company.id) || [];
+        if (!apps.length) { lines.push('- 暂无投递', ''); continue; }
+        for (const app of apps) {
+          lines.push(`#### ${app.title}`, '', `- 记录 ID：${app.id}`, `- 状态：${app.status}`, `- 招聘批次：${app.recruitmentBatch}`, `- 城市：${app.city || '—'}`, `- 方向：${app.direction || '—'}`, `- 投递日期：${app.appliedAt || '—'}`, `- 岗位链接：${app.jobUrl || '—'}`, `- 下一步行动：${app.nextAction || '—'}`, `- 行动时间：${app.nextActionAt || '—'}`);
+          if (app.notes) lines.push('', '备注：', '', app.notes);
+          const events = snapshot.statusEvents.filter(x => x.applicationId === app.id).sort((a,b) => String(a.createdAt).localeCompare(String(b.createdAt)));
+          if (events.length) {
+            lines.push('', '##### 状态历史', '');
+            events.forEach(event => lines.push(`- ${event.createdAt || ''}：${event.fromStatus || '初始'} → ${event.toStatus}${event.note ? `（${event.note.replace(/\n/g, ' ')}）` : ''}`));
+          }
+          const interviews = snapshot.interviews.filter(x => x.applicationId === app.id);
+          for (const interview of interviews) {
+            lines.push('', `##### 面试：${interview.round}`, '', `- 时间：${interview.scheduledAt || '—'}`, `- 形式：${interview.format || '—'}`, `- 团队：${interview.team || '—'}`, `- 结果：${interview.result || '—'}`);
+            if (interview.questions) lines.push('', '**问题**', '', interview.questions);
+            if (interview.answers) lines.push('', '**回答**', '', interview.answers);
+            if (interview.followUps) lines.push('', '**追问**', '', interview.followUps);
+            if (interview.feedback) lines.push('', '**反馈**', '', interview.feedback);
+            if (interview.review) lines.push('', '**复盘**', '', interview.review);
+          }
+          lines.push('');
+        }
+      }
+      const standaloneInterviews = snapshot.interviews.filter(item => !item.applicationId);
+      if (standaloneInterviews.length) {
+        lines.push('## 独立面试记录', '');
+        for (const interview of standaloneInterviews) {
+          lines.push(`**${interview.companyName} · ${interview.positionName} · ${interview.round}**`, '', `- 时间：${interview.scheduledAt || '—'}`, `- 形式：${interview.format || '—'}`, `- 团队：${interview.team || '—'}`, `- 结果：${interview.result || '—'}`);
+          if (interview.questions) lines.push('', '**问题**', '', interview.questions);
+          if (interview.answers) lines.push('', '**回答**', '', interview.answers);
+          if (interview.followUps) lines.push('', '**追问**', '', interview.followUps);
+          if (interview.feedback) lines.push('', '**反馈**', '', interview.feedback);
+          if (interview.review) lines.push('', '**复盘**', '', interview.review);
+          lines.push('');
+        }
+      }
+      return lines.join('\n');
+    }
+    function exportData(format) {
+      const snapshot = clone(state); snapshot.exportedAt = now();
+      if (format === 'json') return JSON.stringify(snapshot, null, 2);
+      if (format === 'csv') return exportCSV(snapshot);
+      if (format === 'markdown' || format === 'md') return exportMarkdown(snapshot);
+      throw new Error(`不支持的导出格式：${format}`);
+    }
+    function download(content, filename, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename; document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    async function importData(input, { format = 'json', mode = 'merge' } = {}) {
+      const parsed = parseImport(input, format);
+      if (mode === 'replace') {
+        assert(format === 'json', '覆盖模式仅支持 JSON 全量备份');
+        validateSnapshot(parsed);
+        await savePrevious(); state = normalizeSnapshot(parsed);
+      } else if (mode === 'merge') {
+        await savePrevious(); state = mergeSnapshots(state, parsed);
+      } else throw new Error('mode 只能是 merge 或 replace');
+      await persist();
+      return { ok: true, counts: validateSnapshot(state).counts };
+    }
+
+    async function upsertCompany(data) {
+      const name = textValue(data.name); assert(name, '公司名称不能为空');
+      const duplicate = state.companies.find(x => normalizeName(x.name) === normalizeName(name) && x.id !== data.id);
+      assert(!duplicate, `公司已存在：${duplicate?.name || name}`);
+      const existing = data.id ? state.companies.find(x => x.id === data.id) : null;
+      if (existing) Object.assign(existing, { name, notes: textValue(data.notes), updatedAt: now() });
+      else { const item = { id: makeId('company'), name, notes:textValue(data.notes), createdAt:now(), updatedAt:now() }; state.companies.push(item); data = item; }
+      await persist(); return clone(existing || data);
+    }
+    async function upsertApplication(data) {
+      assert(textValue(data.title), '岗位名称不能为空'); assert(STATUSES.includes(data.status), '状态无效'); assert(textValue(data.recruitmentBatch), '招聘批次不能为空');
+      const company = ensureCompany(data.companyName, data.companyId);
+      const existing = data.id ? state.applications.find(x => x.id === data.id) : null;
+      const item = {
+        companyId:company.id, title:textValue(data.title), city:nullable(data.city), direction:nullable(data.direction), status:data.status,
+        recruitmentBatch:textValue(data.recruitmentBatch), appliedAt:nullable(data.appliedAt), jobUrl:nullable(data.jobUrl), notes:textValue(data.notes),
+        nextAction:textValue(data.nextAction), nextActionAt:nullable(data.nextActionAt), updatedAt:now()
+      };
+      if (existing) {
+        const oldStatus = existing.status; Object.assign(existing, item);
+        if (oldStatus !== item.status) state.statusEvents.push({ id:makeId('status-event'), applicationId:existing.id, fromStatus:oldStatus, toStatus:item.status, note:nullable(data.statusNote), createdAt:now() });
+        data = existing;
+      } else {
+        data = { id:makeId('application'), ...item, createdAt:now() }; state.applications.push(data);
+        state.statusEvents.push({ id:makeId('status-event'), applicationId:data.id, fromStatus:null, toStatus:data.status, note:nullable(data.statusNote) || '新建投递', createdAt:now() });
+      }
+      await persist(); return clone(data);
+    }
+    async function updateStatus(applicationId, status, note = null) {
+      const app = findApplication(applicationId); assert(app, '投递不存在'); assert(STATUSES.includes(status), '状态无效');
+      if (app.status === status) return clone(app);
+      const oldStatus = app.status; app.status = status; app.updatedAt = now();
+      state.statusEvents.push({ id:makeId('status-event'), applicationId, fromStatus:oldStatus, toStatus:status, note:nullable(note), createdAt:now() });
+      await persist(); return clone(app);
+    }
+    async function deleteApplication(id) {
+      const app = findApplication(id); assert(app, '投递不存在');
+      const company = findCompany(app.companyId);
+      state.interviews.forEach(interview => {
+        if (interview.applicationId === id) Object.assign(interview, { applicationId:null, companyName:company?.name || interview.companyName || '未知公司', positionName:app.title, updatedAt:now() });
+      });
+      state.applications = state.applications.filter(x => x.id !== id);
+      state.statusEvents = state.statusEvents.filter(x => x.applicationId !== id);
+      await persist();
+    }
+    async function upsertInterview(data) {
+      const applicationId = nullable(data.applicationId);
+      const application = applicationId ? findApplication(applicationId) : null;
+      if (applicationId) assert(application, '关联的投递不存在');
+      assert(textValue(data.round), '面试轮次不能为空');
+      if (!application) { assert(textValue(data.companyName), '公司名称不能为空'); assert(textValue(data.positionName), '岗位名称不能为空'); }
+      const linkedCompany = application ? findCompany(application.companyId) : null;
+      const company = application ? linkedCompany : ensureCompany(data.companyName);
+      assert(company, '公司名称不能为空');
+      const positionName = application?.title || textValue(data.positionName);
+      assert(positionName, '岗位名称不能为空');
+      const item = { applicationId, companyName:company.name, positionName, round:textValue(data.round), scheduledAt:nullable(data.scheduledAt), format:nullable(data.format), team:nullable(data.team), questions:textValue(data.questions), answers:textValue(data.answers), followUps:textValue(data.followUps), feedback:textValue(data.feedback), result:nullable(data.result), review:textValue(data.review), updatedAt:now() };
+      const existing = data.id ? state.interviews.find(x => x.id === data.id) : null;
+      if (existing) { Object.assign(existing, item); data = existing; }
+      else { data = { id:makeId('interview'), ...item, createdAt:now() }; state.interviews.push(data); }
+      await persist(); return clone(data);
+    }
+    async function deleteInterview(id) { state.interviews = state.interviews.filter(x => x.id !== id); await persist(); }
+
+    function countBy(items, getter) {
+      const map = new Map(); items.forEach(item => { const key = getter(item) || '未填写'; map.set(key, (map.get(key) || 0) + 1); });
+      return [...map.entries()].sort((a,b) => b[1] - a[1] || String(a[0]).localeCompare(String(b[0]), 'zh-CN'));
+    }
+    function barsHTML(entries, color = '') {
+      if (!entries.length) return '<div class="empty"><strong>暂无数据</strong>新增当前批次投递后会自动生成。</div>';
+      const max = Math.max(...entries.map(x => x[1]), 1);
+      return entries.map(([label,value]) => `<div class="bar-row"><div class="bar-label" title="${escapeHTML(label)}">${escapeHTML(label)}</div><div class="bar-track"><div class="bar-fill ${color}" style="width:${Math.max(value / max * 100, 4)}%"></div></div><div class="bar-value">${value}</div></div>`).join('');
+    }
+
+    function renderDashboard() {
+      const batch = state.settings.currentBatch;
+      const apps = state.applications.filter(x => x.recruitmentBatch === batch);
+      const companies = new Set(apps.map(x => x.companyId)).size;
+      $('#batchEyebrow').textContent = batch.toUpperCase();
+      $('#metricCompanies').textContent = companies;
+      $('#metricApplications').textContent = apps.length;
+      $('#metricActive').textContent = apps.filter(x => !TERMINAL_STATUSES.has(x.status)).length;
+      $('#metricOffers').textContent = apps.filter(x => x.status === '已 Offer').length;
+      $('#metricCompaniesNote').textContent = `全部公司清单 ${state.companies.length} 家`;
+      const historicalCount = state.applications.length - apps.length;
+      $('#metricApplicationsNote').textContent = historicalCount ? `另有其他批次 ${historicalCount} 条` : '从空白台账开始记录';
+      $('#statusChartCaption').textContent = batch;
+      $('#statusChart').innerHTML = barsHTML(countBy(apps, x => x.status));
+      $('#dimensionCharts').innerHTML = `<div><div class="card-header"><h3>方向</h3></div>${barsHTML(countBy(apps, x => x.direction), 'orange')}</div><div><div class="card-header"><h3>城市</h3></div>${barsHTML(countBy(apps, x => x.city))}</div>`;
+
+      const current = Date.now(), horizon = current + 30 * 86400000;
+      const upcoming = [];
+      apps.forEach(app => { if (app.nextActionAt) upcoming.push({ at:app.nextActionAt, title:app.nextAction || '跟进投递', detail:`${findCompany(app.companyId)?.name || '未知公司'} · ${app.title}` }); });
+      state.interviews.forEach(interview => {
+        if (!interview.scheduledAt) return;
+        const app = interview.applicationId ? findApplication(interview.applicationId) : null;
+        if (!app || app.recruitmentBatch === batch) upcoming.push({ at:interview.scheduledAt, title:`${interview.round}面试`, detail:`${app ? (findCompany(app.companyId)?.name || interview.companyName) : interview.companyName} · ${app?.title || interview.positionName}` });
+      });
+      const visible = upcoming.filter(x => { const t = new Date(x.at).getTime(); return t >= current - 86400000 && t <= horizon; }).sort((a,b) => new Date(a.at) - new Date(b.at));
+      $('#upcomingList').innerHTML = visible.length ? visible.map(x => `<div class="todo"><span class="todo-dot"></span><div><strong>${escapeHTML(x.title)}</strong><p>${escapeHTML(x.detail)}</p></div><time>${escapeHTML(formatDate(x.at, true))}</time></div>`).join('') : '<div class="empty"><strong>未来 30 天没有待办</strong>在投递记录中填写下一步和时间。</div>';
+
+      const hints = [];
+      const missingTitle = state.applications.filter(x => x.title === '岗位待补充').length;
+      if (missingTitle) hints.push({ title:`${missingTitle} 条岗位名称待补充`, detail:'这些是从旧 Markdown 导入的历史记录。' });
+      const withoutBackup = !state.metadata.lastExportAt;
+      if (withoutBackup) hints.push({ title:'还没有导出过 JSON 备份', detail:'浏览器数据被清理后无法从 HTML 自动恢复。' });
+      if (!apps.length) hints.push({ title:`${batch} 尚无投递`, detail:'新增第一条秋招岗位后，总览会自动更新。' });
+      $('#dataHints').innerHTML = hints.length ? hints.map(x => `<div class="todo"><span class="todo-dot"></span><div><strong>${escapeHTML(x.title)}</strong><p>${escapeHTML(x.detail)}</p></div></div>`).join('') : '<div class="empty"><strong>数据完整</strong>当前没有需要处理的提示。</div>';
+    }
+
+    function renderApplicationOptions() {
+      const statusFilter = $('#applicationStatusFilter'), currentStatus = statusFilter.value;
+      statusFilter.innerHTML = '<option value="">全部状态</option>' + STATUSES.map(x => `<option value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join(''); statusFilter.value = currentStatus;
+      const batches = [...new Set([state.settings.currentBatch, ...state.applications.map(x => x.recruitmentBatch)])].filter(Boolean).sort().reverse();
+      const batchFilter = $('#applicationBatchFilter'), currentBatch = batchFilter.value;
+      batchFilter.innerHTML = '<option value="">全部批次</option>' + batches.map(x => `<option value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join(''); batchFilter.value = currentBatch;
+      $('#appStatus').innerHTML = STATUSES.map(x => `<option value="${escapeHTML(x)}">${escapeHTML(x)}</option>`).join('');
+      $('#applicationCompanyOptions').innerHTML = MAJOR_COMPANY_CANDIDATES.map(name => `<option value="${escapeHTML(name)}"></option>`).join('');
+      $('#companyOptions').innerHTML = [...state.companies].sort((a,b) => a.name.localeCompare(b.name,'zh-CN')).map(x => `<option value="${escapeHTML(x.name)}"></option>`).join('');
+      const appMap = companyMap();
+      $('#interviewApplication').innerHTML = '<option value="">不关联投递（独立面经）</option>' + [...state.applications].sort((a,b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).map(app => `<option value="${escapeHTML(app.id)}">${escapeHTML(appMap.get(app.companyId)?.name || '未知公司')} · ${escapeHTML(app.title)} · ${escapeHTML(app.recruitmentBatch)}</option>`).join('');
+      $('#newInterviewButton').disabled = false;
+    }
+
+    function renderApplications() {
+      const query = normalizeName($('#applicationSearch').value), status = $('#applicationStatusFilter').value, batch = $('#applicationBatchFilter').value;
+      const companies = companyMap();
+      const apps = state.applications.filter(app => {
+        const haystack = normalizeName([companies.get(app.companyId)?.name, app.title, app.city, app.direction, app.notes].join(' '));
+        return (!query || haystack.includes(query)) && (!status || app.status === status) && (!batch || app.recruitmentBatch === batch);
+      }).sort((a,b) => String(b.updatedAt).localeCompare(String(a.updatedAt)));
+      $('#applicationsBody').innerHTML = apps.map(app => {
+        const company = companies.get(app.companyId), link = safeUrl(app.jobUrl);
+        const title = link ? `<a href="${escapeHTML(link)}" target="_blank" rel="noreferrer">${escapeHTML(app.title)}</a>` : escapeHTML(app.title);
+        const statusOptions = STATUSES.map(statusName => `<option value="${escapeHTML(statusName)}"${statusName === app.status ? ' selected' : ''}>${escapeHTML(statusName)}</option>`).join('');
+        return `<tr><td><div class="job-title">${escapeHTML(company?.name || '未知公司')} · ${title}</div><div class="job-meta">${escapeHTML(app.notes ? app.notes.slice(0,70).replace(/\n/g,' ') : '无备注')}</div></td><td>${escapeHTML(app.recruitmentBatch)}</td><td><div class="status-editor"><select class="field-compact" data-status-select="${escapeHTML(app.id)}">${statusOptions}</select><button class="btn small primary" data-quick-status="${escapeHTML(app.id)}">更新</button></div></td><td>${escapeHTML(app.city || '—')}<div class="job-meta">${escapeHTML(app.direction || '—')}</div></td><td>${escapeHTML(app.nextAction || '—')}<div class="job-meta">${escapeHTML(formatDate(app.nextActionAt, true))}</div></td><td>${escapeHTML(formatDate(app.updatedAt))}</td><td><div class="row-actions"><button class="btn small" data-edit-application="${escapeHTML(app.id)}">编辑</button><button class="btn small danger" data-delete-application="${escapeHTML(app.id)}">删除</button></div></td></tr>`;
+      }).join('');
+      $('#applicationsEmpty').hidden = apps.length > 0;
+    }
+
+    function renderInterviews() {
+      const apps = applicationMap(), companies = companyMap();
+      const interviewTime = item => {
+        const value = item.scheduledAt || item.createdAt;
+        const timestamp = value ? new Date(value).getTime() : 0;
+        return Number.isFinite(timestamp) ? timestamp : 0;
+      };
+      const interviews = [...state.interviews].sort((a,b) => interviewTime(b) - interviewTime(a));
+      $('#interviewGrid').innerHTML = interviews.map(item => {
+        const app = apps.get(item.applicationId), company = app ? companies.get(app.companyId) : null;
+        const excerpt = item.review || item.questions || item.feedback || '暂未填写问题或复盘。';
+        const sections = [['面试问题',item.questions],['我的回答',item.answers],['追问',item.followUps],['反馈',item.feedback],['复盘',item.review]].filter(([,value]) => value).map(([label,value]) => `<section><h4>${label}</h4><p>${escapeHTML(value)}</p></section>`).join('');
+        return `<article class="card interview-card"><h3>${escapeHTML(company?.name || item.companyName || '未知公司')} · ${escapeHTML(item.round)}</h3><div class="meta">${escapeHTML(app?.title || item.positionName || '未知岗位')} · ${escapeHTML(formatDate(item.scheduledAt, true))} · ${escapeHTML(item.format || '形式未填')}</div><p class="excerpt">${escapeHTML(excerpt.slice(0,280))}${excerpt.length > 280 ? '…' : ''}</p>${sections ? `<details class="interview-detail"><summary>查看完整面经</summary>${sections}</details>` : ''}<footer><span class="status-pill">${escapeHTML(item.result || '结果待定')}</span><div class="row-actions"><button class="btn small" data-edit-interview="${escapeHTML(item.id)}">编辑</button><button class="btn small danger" data-delete-interview="${escapeHTML(item.id)}">删除</button></div></footer></article>`;
+      }).join('');
+      $('#interviewsEmpty').hidden = interviews.length > 0;
+    }
+
+    function renderData() {
+      $('#companyCountText').textContent = `${state.companies.length} 家公司，${state.applications.length} 条投递`;
+      $('#companyChips').innerHTML = [...state.companies].sort((a,b) => a.name.localeCompare(b.name,'zh-CN')).map(x => `<span class="company-chip">${escapeHTML(x.name)}<button title="编辑" aria-label="编辑 ${escapeHTML(x.name)}" data-edit-company="${escapeHTML(x.id)}">✎</button></span>`).join('');
+      $('#currentBatchInput').value = state.settings.currentBatch;
+      $('#restorePreviousButton').disabled = !previousAvailable;
+      $('#exportStatus').textContent = state.metadata.lastExportAt ? `上次导出：${formatDate(state.metadata.lastExportAt, true)}。` : '尚未在这个浏览器中导出备份。';
+      $('#recordSummary').textContent = `当前共 ${state.companies.length} 家公司、${state.applications.length} 条投递、${state.statusEvents.length} 条状态历史、${state.interviews.length} 场面试。`;
+    }
+    function updateStorageBadge() {
+      const badge = $('#storageBadge');
+      badge.className = `storage-badge ${storageKind === 'memory' ? 'warn' : 'ok'}`;
+      badge.textContent = storageKind === 'indexeddb' ? '本地数据库已保存' : storageKind === 'localstorage' ? '浏览器本地存储已保存' : '临时内存：请立即导出';
+    }
+    function renderAll() { renderApplicationOptions(); renderDashboard(); renderApplications(); renderInterviews(); renderData(); }
+
+    function goTo(page) {
+      $$('.nav button').forEach(x => x.classList.toggle('active', x.dataset.page === page));
+      $$('.page').forEach(x => x.classList.toggle('active', x.id === `page-${page}`));
+      if (page === 'applications') renderApplications();
+      scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    function openApplicationDialog(id = null) {
+      const form = $('#applicationForm'); form.reset(); form.elements.id.value = '';
+      form.elements.companyId.value = '';
+      $('#appBatch').value = state.settings.currentBatch; $('#appStatus').value = '已投递'; $('#applicationHistory').hidden = true;
+      if (id) {
+        const app = findApplication(id); if (!app) return;
+        $('#applicationDialogTitle').textContent = '编辑投递';
+        Object.entries(app).forEach(([key,value]) => { if (form.elements[key]) form.elements[key].value = key === 'nextActionAt' ? toLocalInput(value) : value ?? ''; });
+        form.elements.companyId.value = app.companyId;
+        form.elements.companyName.value = findCompany(app.companyId)?.name || '';
+        const events = state.statusEvents.filter(x => x.applicationId === id).sort((a,b) => String(b.createdAt).localeCompare(String(a.createdAt)));
+        const history = $('#applicationHistory'); history.hidden = false; history.innerHTML = `<h4>状态历史</h4>${events.length ? events.map(x => `<div class="history-item"><strong>${escapeHTML(x.fromStatus || '初始')} → ${escapeHTML(x.toStatus)}</strong> · <time>${escapeHTML(formatDate(x.createdAt, true))}</time>${x.note ? `<p>${escapeHTML(x.note)}</p>` : ''}</div>`).join('') : '<div class="empty">暂无状态历史</div>'}`;
+      } else $('#applicationDialogTitle').textContent = '新增投递';
+      $('#applicationDialog').showModal();
+    }
+    function openInterviewDialog(id = null) {
+      const form = $('#interviewForm'); form.reset(); form.elements.id.value = '';
+      if (id) {
+        const item = state.interviews.find(x => x.id === id); if (!item) return;
+        $('#interviewDialogTitle').textContent = '编辑面试记录';
+        Object.entries(item).forEach(([key,value]) => { if (form.elements[key]) form.elements[key].value = key === 'scheduledAt' ? toLocalInput(value) : value ?? ''; });
+      } else $('#interviewDialogTitle').textContent = '记录面试';
+      $('#interviewDialog').showModal();
+    }
+    function openCompanyDialog(id = null) {
+      const form = $('#companyForm'); form.reset(); form.elements.id.value = '';
+      if (id) {
+        const item = state.companies.find(x => x.id === id); if (!item) return;
+        $('#companyDialogTitle').textContent = '编辑公司'; form.elements.id.value = item.id; form.elements.name.value = item.name; form.elements.notes.value = item.notes || '';
+      } else $('#companyDialogTitle').textContent = '新增公司';
+      $('#companyDialog').showModal();
+    }
+
+    function formDataObject(form) { return Object.fromEntries(new FormData(form).entries()); }
+    function bindEvents() {
+      $$('.nav button').forEach(button => button.addEventListener('click', () => goTo(button.dataset.page)));
+      $$('[data-go]').forEach(button => button.addEventListener('click', () => goTo(button.dataset.go)));
+      $$('[data-new-application]').forEach(button => button.addEventListener('click', () => openApplicationDialog()));
+      $$('[data-close-dialog]').forEach(button => button.addEventListener('click', () => button.closest('dialog').close()));
+      $('#newInterviewButton').addEventListener('click', () => openInterviewDialog());
+      $('#newCompanyButton').addEventListener('click', () => openCompanyDialog());
+      $('#interviewApplication').addEventListener('change', event => {
+        const app = findApplication(event.target.value); if (!app) return;
+        $('#interviewCompany').value = findCompany(app.companyId)?.name || '';
+        $('#interviewPosition').value = app.title;
+      });
+      ['applicationSearch','applicationStatusFilter','applicationBatchFilter'].forEach(id => $('#' + id).addEventListener(id === 'applicationSearch' ? 'input' : 'change', renderApplications));
+      $('#clearApplicationFilters').addEventListener('click', () => { $('#applicationSearch').value = ''; $('#applicationStatusFilter').value = ''; $('#applicationBatchFilter').value = ''; renderApplications(); });
+
+      $('#applicationsBody').addEventListener('click', async event => {
+        const edit = event.target.closest('[data-edit-application]'), del = event.target.closest('[data-delete-application]'), quick = event.target.closest('[data-quick-status]');
+        if (edit) openApplicationDialog(edit.dataset.editApplication);
+        if (quick) {
+          const applicationId = quick.dataset.quickStatus;
+          const nextStatus = quick.closest('tr')?.querySelector('[data-status-select]')?.value;
+          const app = findApplication(applicationId);
+          if (!app || !nextStatus) return;
+          if (app.status === nextStatus) return toast('状态没有变化');
+          const note = prompt(`将状态从“${app.status}”更新为“${nextStatus}”\n\n可填写说明，也可以直接留空：`, '');
+          if (note === null) { renderApplications(); return; }
+          await updateStatus(applicationId, nextStatus, note);
+          toast(`状态已更新为“${nextStatus}”`);
+        }
+        if (del) {
+          const app = findApplication(del.dataset.deleteApplication), company = app && findCompany(app.companyId);
+          if (app && confirm(`删除“${company?.name || ''} · ${app.title}”及其状态历史？已记录的面经会保留为独立面经。`)) { await deleteApplication(app.id); toast('投递已删除'); }
+        }
+      });
+      $('#interviewGrid').addEventListener('click', async event => {
+        const edit = event.target.closest('[data-edit-interview]'), del = event.target.closest('[data-delete-interview]');
+        if (edit) openInterviewDialog(edit.dataset.editInterview);
+        if (del && confirm('删除这条面试记录？')) { await deleteInterview(del.dataset.deleteInterview); toast('面试记录已删除'); }
+      });
+      $('#companyChips').addEventListener('click', event => { const edit = event.target.closest('[data-edit-company]'); if (edit) openCompanyDialog(edit.dataset.editCompany); });
+
+      $('#applicationForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        try { const data = formDataObject(event.currentTarget); data.nextActionAt = nullable(data.nextActionAt); await upsertApplication(data); $('#applicationDialog').close(); toast('投递已保存'); }
+        catch (error) { toast(error.message, true); }
+      });
+      $('#interviewForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        try { const data = formDataObject(event.currentTarget); data.scheduledAt = nullable(data.scheduledAt); await upsertInterview(data); $('#interviewDialog').close(); toast('面试记录已保存'); }
+        catch (error) { toast(error.message, true); }
+      });
+      $('#companyForm').addEventListener('submit', async event => {
+        event.preventDefault();
+        try { await upsertCompany(formDataObject(event.currentTarget)); $('#companyDialog').close(); toast('公司已保存'); }
+        catch (error) { toast(error.message, true); }
+      });
+
+      $$('[data-export]').forEach(button => button.addEventListener('click', async () => {
+        try {
+          const format = button.dataset.export, date = new Date().toISOString().slice(0,10);
+          const info = { json:[`秋招记录-${date}.json`,'application/json;charset=utf-8'], csv:[`秋招投递-${date}.csv`,'text/csv;charset=utf-8'], markdown:[`秋招记录-${date}.md`,'text/markdown;charset=utf-8'] }[format];
+          download(exportData(format), info[0], info[1]); state.metadata.lastExportAt = now(); await persist(); toast(`${format.toUpperCase()} 已导出`);
+        } catch (error) { toast(error.message, true); }
+      }));
+      $('#importFile').addEventListener('change', () => { const file = $('#importFile').files[0]; $('#importButton').disabled = !file; $('#importStatus').textContent = file ? `已选择 ${file.name}（${Math.ceil(file.size / 1024)} KB），尚未写入。` : '选择文件后会先校验，再请求确认。'; });
+      $('#importButton').addEventListener('click', async () => {
+        const file = $('#importFile').files[0]; if (!file) return;
+        const extension = file.name.split('.').pop().toLowerCase(), format = extension === 'json' ? 'json' : extension === 'csv' ? 'csv' : 'markdown', mode = $('#importMode').value;
+        try {
+          const text = await file.text(), parsed = parseImport(text, format), counts = validateSnapshot(parsed, { partial: mode !== 'replace' }).counts;
+          const summary = `公司 ${counts.companies}、投递 ${counts.applications}、状态历史 ${counts.statusEvents}、面试 ${counts.interviews}`;
+          if (!confirm(`${mode === 'replace' ? '覆盖全部数据' : '合并新信息'}？\n\n${summary}\n\n导入前版本会保留为一次本地恢复点。`)) return;
+          await importData(parsed, { format:'json', mode });
+          $('#importStatus').textContent = `导入成功：${summary}`; $('#importFile').value = ''; $('#importButton').disabled = true; toast('数据导入成功');
+        } catch (error) { $('#importStatus').textContent = `导入失败：${error.message}`; toast(error.message, true); }
+      });
+      $('#saveBatchButton').addEventListener('click', async () => { const value = textValue($('#currentBatchInput').value); if (!value) return toast('批次不能为空', true); state.settings.currentBatch = value; await persist(); toast('当前批次已更新'); });
+      $('#restorePreviousButton').addEventListener('click', async () => {
+        if (!previousAvailable || !confirm('恢复到最近一次导入之前的数据？当前未导出的修改会被替换。')) return;
+        const previous = await storageGet(PREVIOUS_KEY); if (!previous) return toast('没有可恢复的数据', true);
+        validateSnapshot(previous); state = normalizeSnapshot(previous); await persist(); toast('已恢复导入前数据');
+      });
+      $('#resetButton').addEventListener('click', async () => {
+        if (!confirm('恢复到 HTML 首次内置的数据？当前浏览器中的后续记录会被替换。建议先导出 JSON。')) return;
+        await savePrevious(); state = clone(INITIAL_SNAPSHOT); await persist(); toast('已恢复最初数据');
+      });
+    }
+
+    async function initialize() {
+      await detectStorage();
+      try {
+        const stored = await storageGet(STORAGE_KEY);
+        state = stored ? normalizeSnapshot(stored) : clone(INITIAL_SNAPSHOT);
+        if (storageKind !== 'memory') {
+          if (!stored) await storageSet(STORAGE_KEY, state);
+          previousAvailable = Boolean(await storageGet(PREVIOUS_KEY));
+        }
+        validateSnapshot(state);
+      } catch (error) {
+        console.error(error); storageKind = 'memory'; state = clone(INITIAL_SNAPSHOT); toast(`本地数据读取失败，已使用内置数据：${error.message}`, true);
+      }
+      bindEvents(); renderAll(); updateStorageBadge();
+      return true;
+    }
+
+    const ready = initialize();
+    globalThis.AutumnLedger = Object.freeze({
+      schemaVersion: SCHEMA_VERSION,
+      statuses: [...STATUSES],
+      ready,
+      getSnapshot: async () => { await ready; return clone(state); },
+      validate: input => validateSnapshot(input),
+      importData: async (input, options) => { await ready; return importData(input, options); },
+      exportData: async format => { await ready; return exportData(format); },
+      upsertCompany: async data => { await ready; return upsertCompany(data); },
+      upsertApplication: async data => { await ready; return upsertApplication(data); },
+      updateStatus: async (id, status, note) => { await ready; return updateStatus(id, status, note); },
+      upsertInterview: async data => { await ready; return upsertInterview(data); },
+      deleteApplication: async id => { await ready; return deleteApplication(id); },
+      deleteInterview: async id => { await ready; return deleteInterview(id); },
+      resetToInitial: async () => { await ready; await savePrevious(); state = clone(INITIAL_SNAPSHOT); await persist(); return clone(state); }
+    });
+  })();
+  </script>
+</body>
+</html>

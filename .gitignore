@@ -1,0 +1,31 @@
+# 私用实例与历史备份：绝不能提交
+/秋招记录.html
+/backups/
+/private/
+/data/
+/exports/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# 页面导出的个人数据
+/秋招记录-*.json
+/秋招记录-*.md
+/秋招投递-*.csv
+*.backup.json
+*.export.json
+*.export.csv
+*.export.md
+
+# 本机、编辑器与临时文件
+.DS_Store
+Thumbs.db
+Desktop.ini
+.idea/
+.vscode/
+node_modules/
+.env
+.env.*
+*.log
+*.tmp
+*.tmp-*

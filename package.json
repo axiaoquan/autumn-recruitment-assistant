@@ -1,0 +1,14 @@
+{
+  "name": "autumn-recruitment-assistant",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A fully offline graduate recruitment application and interview tracker.",
+  "type": "module",
+  "scripts": {
+    "check": "node scripts/check.mjs",
+    "privacy-check": "node scripts/privacy-check.mjs"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
