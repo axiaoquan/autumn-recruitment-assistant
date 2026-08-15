@@ -8,6 +8,14 @@
 *.sqlite-shm
 *.sqlite-wal
 
+# 本地维护文件：不包含在面向使用者的公开仓库中
+/.github/
+/DATA_INTERFACE.md
+/PRIVACY.md
+/ledger.schema.json
+/package.json
+/scripts/
+
 # 页面导出的个人数据
 /秋招记录-*.json
 /秋招记录-*.md
